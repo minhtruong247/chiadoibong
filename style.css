@@ -1026,6 +1026,9 @@ button {
   font-weight: 700;
   color: #fff;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .pitch-card-sub {

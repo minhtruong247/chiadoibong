@@ -34,7 +34,7 @@ class FootballTeamApp {
 
   // LocalStorage Helpers
   loadPlayers() {
-    const saved = localStorage.getItem('fb_players_v4');
+    const saved = localStorage.getItem('fb_players_v5');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) {}
     }
@@ -42,7 +42,7 @@ class FootballTeamApp {
   }
 
   savePlayers() {
-    localStorage.setItem('fb_players_v4', JSON.stringify(this.players));
+    localStorage.setItem('fb_players_v5', JSON.stringify(this.players));
   }
 
   loadCustomPairs() {
@@ -240,8 +240,24 @@ class FootballTeamApp {
       player.isMvp = isMvp;
       this.savePlayers();
 
-      // Nếu đang có kết quả chia đội, cập nhật luôn hiển thị kết quả
+      // Cập nhật ngay trong currentResult (nếu đã chia đội) để sân bóng nhảy theo tức thì
       if (this.currentResult) {
+        const updateP = (p) => {
+          if (p && p.id === id) {
+            p.name = name;
+            p.skill = skill;
+            p.pos = pos;
+            p.isMvp = isMvp;
+          }
+        };
+        if (this.currentResult.teamBlue) this.currentResult.teamBlue.forEach(updateInTeam => updateP(updateInTeam));
+        if (this.currentResult.teamRed) this.currentResult.teamRed.forEach(updateInTeam => updateP(updateInTeam));
+        if (this.currentResult.pairs) {
+          this.currentResult.pairs.forEach(pair => {
+            if (pair.blue) updateP(pair.blue);
+            if (pair.red) updateP(pair.red);
+          });
+        }
         this.renderResult();
       }
 
