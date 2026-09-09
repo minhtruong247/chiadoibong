@@ -207,10 +207,12 @@ class FootballTeamApp {
     this.editPlayerPosSelect.value = player.pos;
 
     this.editPlayerModal.classList.add('active');
-    setTimeout(() => {
-      this.editPlayerNameInput.focus();
-      this.editPlayerNameInput.select();
-    }, 100);
+    if (window.innerWidth > 600) {
+      setTimeout(() => {
+        this.editPlayerNameInput.focus();
+        this.editPlayerNameInput.select();
+      }, 100);
+    }
   }
 
   closeEditModal() {
