@@ -8,15 +8,15 @@ const DEFAULT_PLAYERS = [
   { id: 'p1', name: 'Thiên Nhựt', skill: 5, pos: 'ALL', attending: true },
   { id: 'p2', name: 'Trương Thuận', skill: 5, pos: 'ALL', attending: true },
   { id: 'p3', name: 'Mai Con', skill: 5, pos: 'GK', attending: true },
-  { id: 'p4', name: 'Mai Kiên', skill: 4, pos: 'ALL', attending: true },
+  { id: 'p4', name: 'Mai Kiên', skill: 3, pos: 'ALL', attending: true },
   { id: 'p5', name: 'Nhựt Tiến', skill: 4, pos: 'ALL', attending: true },
   { id: 'p6', name: 'Trung Trí', skill: 4, pos: 'MF', attending: true },
   { id: 'p7', name: 'Sơn Đại Ca', skill: 3, pos: 'DF', attending: true },
   { id: 'p8', name: 'Nhứt Đạt', skill: 3, pos: 'DF', attending: true },
   { id: 'p9', name: 'Minh Trường', skill: 3, pos: 'ALL', attending: true },
-  { id: 'p10', name: 'Trí Dũng', skill: 3, pos: 'ALL', attending: true },
+  { id: 'p10', name: 'Trí Dũng', skill: 4, pos: 'ALL', attending: true },
   { id: 'p11', name: 'Trâu Đen', skill: 3, pos: 'GK', attending: true },
-  { id: 'p12', name: 'Anh Lượng', skill: 2, pos: 'ALL', attending: true }
+  { id: 'p12', name: 'Anh Lượng', skill: 3, pos: 'ALL', attending: true }
 ];
 
 const SKILL_SCORES = { 5: 95, 4: 80, 3: 65, 2: 50, 1: 35 };
@@ -34,7 +34,7 @@ class FootballTeamApp {
 
   // LocalStorage Helpers
   loadPlayers() {
-    const saved = localStorage.getItem('fb_players_v2');
+    const saved = localStorage.getItem('fb_players_v3');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) {}
     }
@@ -42,7 +42,7 @@ class FootballTeamApp {
   }
 
   savePlayers() {
-    localStorage.setItem('fb_players_v2', JSON.stringify(this.players));
+    localStorage.setItem('fb_players_v3', JSON.stringify(this.players));
   }
 
   loadCustomPairs() {
