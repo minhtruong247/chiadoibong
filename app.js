@@ -7,13 +7,13 @@
 const DEFAULT_PLAYERS = [
   { id: 'p1', name: 'Thiên Nhựt', skill: 5, pos: 'ALL', attending: true },
   { id: 'p2', name: 'Trương Thuận', skill: 5, pos: 'ALL', attending: true },
-  { id: 'p3', name: 'Mai Con', skill: 5, pos: 'GK', attending: true },
+  { id: 'p3', name: 'Mai Con', skill: 5, pos: 'GK', attending: true, isMvp: true },
   { id: 'p4', name: 'Mai Kiên', skill: 3, pos: 'ALL', attending: true },
   { id: 'p5', name: 'Nhựt Tiến', skill: 4, pos: 'ALL', attending: true },
   { id: 'p6', name: 'Trung Trí', skill: 4, pos: 'MF', attending: true },
   { id: 'p7', name: 'Sơn Đại Ca', skill: 3, pos: 'DF', attending: true },
   { id: 'p8', name: 'Nhứt Đạt', skill: 3, pos: 'DF', attending: true },
-  { id: 'p9', name: 'Minh Trường', skill: 3, pos: 'ALL', attending: true },
+  { id: 'p9', name: 'Minh Trường', skill: 4, pos: 'ALL', attending: true },
   { id: 'p10', name: 'Trí Dũng', skill: 4, pos: 'ALL', attending: true },
   { id: 'p11', name: 'Trâu Đen', skill: 3, pos: 'GK', attending: true },
   { id: 'p12', name: 'Anh Lượng', skill: 3, pos: 'ALL', attending: true }
@@ -34,7 +34,7 @@ class FootballTeamApp {
 
   // LocalStorage Helpers
   loadPlayers() {
-    const saved = localStorage.getItem('fb_players_v3');
+    const saved = localStorage.getItem('fb_players_v4');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) {}
     }
@@ -42,7 +42,7 @@ class FootballTeamApp {
   }
 
   savePlayers() {
-    localStorage.setItem('fb_players_v3', JSON.stringify(this.players));
+    localStorage.setItem('fb_players_v4', JSON.stringify(this.players));
   }
 
   loadCustomPairs() {
@@ -104,6 +104,7 @@ class FootballTeamApp {
     this.editPlayerNameInput = document.getElementById('edit-player-name');
     this.editPlayerSkillSelect = document.getElementById('edit-player-skill');
     this.editPlayerPosSelect = document.getElementById('edit-player-pos');
+    this.editPlayerMvpCheckbox = document.getElementById('edit-player-mvp');
     this.btnCloseEditModal = document.getElementById('btn-close-edit-modal');
     this.btnCancelEdit = document.getElementById('btn-cancel-edit');
   }
@@ -205,6 +206,9 @@ class FootballTeamApp {
     this.editPlayerNameInput.value = player.name;
     this.editPlayerSkillSelect.value = player.skill.toString();
     this.editPlayerPosSelect.value = player.pos;
+    if (this.editPlayerMvpCheckbox) {
+      this.editPlayerMvpCheckbox.checked = !!player.isMvp;
+    }
 
     this.editPlayerModal.classList.add('active');
     if (window.innerWidth > 600) {
@@ -226,12 +230,14 @@ class FootballTeamApp {
 
     const skill = parseInt(this.editPlayerSkillSelect.value, 10);
     const pos = this.editPlayerPosSelect.value;
+    const isMvp = this.editPlayerMvpCheckbox ? this.editPlayerMvpCheckbox.checked : false;
 
     const player = this.players.find(p => p.id === id);
     if (player) {
       player.name = name;
       player.skill = skill;
       player.pos = pos;
+      player.isMvp = isMvp;
       this.savePlayers();
 
       // Nếu đang có kết quả chia đội, cập nhật luôn hiển thị kết quả
@@ -488,15 +494,16 @@ class FootballTeamApp {
 
   createPitchCard(player, teamColor) {
     const card = document.createElement('div');
-    card.className = 'pitch-player-card';
+    card.className = `pitch-player-card ${player.isMvp ? 'is-mvp-card' : ''}`;
 
     const initial = player.name.trim().charAt(0).toUpperCase();
     const starStr = '★'.repeat(player.skill);
+    const mvpBadge = player.isMvp ? '<span class="pitch-mvp-badge"><i class="fa-solid fa-crown"></i> MVP</span>' : '';
 
     card.innerHTML = `
-      <div class="pitch-jersey">${initial}</div>
+      <div class="pitch-jersey ${player.isMvp ? 'mvp-jersey' : ''}">${initial}</div>
       <div>
-        <div class="pitch-card-name">${player.name}</div>
+        <div class="pitch-card-name">${player.name} ${mvpBadge}</div>
         <div class="pitch-card-sub">
           <span class="pos-tag pos-${player.pos}">${player.pos}</span>
           <span>${starStr}</span>
@@ -518,12 +525,14 @@ class FootballTeamApp {
     text += `━━━━━━━━━━━━━━━━━━━━━\n`;
     text += `🔵 ĐỘI XANH (${teamBlue.length} người - ${blueScore}đ):\n`;
     teamBlue.forEach((p, i) => {
-      text += `  ${i + 1}. ${p.name} [${p.pos}] (${'★'.repeat(p.skill)})\n`;
+      const mvp = p.isMvp ? ' 👑[MVP]' : '';
+      text += `  ${i + 1}. ${p.name}${mvp} [${p.pos}] (${'★'.repeat(p.skill)})\n`;
     });
 
     text += `\n🔴 ĐỘI ĐỎ (${teamRed.length} người - ${redScore}đ):\n`;
     teamRed.forEach((p, i) => {
-      text += `  ${i + 1}. ${p.name} [${p.pos}] (${'★'.repeat(p.skill)})\n`;
+      const mvp = p.isMvp ? ' 👑[MVP]' : '';
+      text += `  ${i + 1}. ${p.name}${mvp} [${p.pos}] (${'★'.repeat(p.skill)})\n`;
     });
 
     text += `━━━━━━━━━━━━━━━━━━━━━\n`;
@@ -562,14 +571,17 @@ class FootballTeamApp {
       item.className = `player-item ${p.attending ? '' : 'not-attending'}`;
 
       const starStr = '★'.repeat(p.skill) + '☆'.repeat(5 - p.skill);
+      const mvpTag = p.isMvp ? '<span class="mvp-tag" title="Cầu thủ xuất sắc nhất (MVP)"><i class="fa-solid fa-crown"></i> MVP</span>' : '';
+      const avatarClass = p.isMvp ? 'player-avatar mvp-avatar' : 'player-avatar';
 
       item.innerHTML = `
         <div class="player-info-left">
           <input type="checkbox" class="checkbox-custom" ${p.attending ? 'checked' : ''} data-id="${p.id}" />
-          <div class="player-avatar">${p.name.charAt(0).toUpperCase()}</div>
-          <div>
+          <div class="${avatarClass}">${p.name.charAt(0).toUpperCase()}</div>
+          <div class="player-name-wrap">
             <span class="player-name" title="Bấm để sửa tên & thông tin">${p.name}</span>
             <span class="pos-tag pos-${p.pos}">${p.pos}</span>
+            ${mvpTag}
           </div>
         </div>
         <div class="player-actions-right">

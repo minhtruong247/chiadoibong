@@ -524,6 +524,85 @@ button {
 .pos-FW { background: #ef4444; color: #7f1d1d; }
 .pos-ALL { background: #8b5cf6; color: #4c1d95; }
 
+/* ==================== MVP BADGE ==================== */
+.player-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.mvp-tag {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.45);
+  letter-spacing: 0.5px;
+  animation: mvpGlow 2.5s infinite alternate;
+}
+
+@keyframes mvpGlow {
+  0% { box-shadow: 0 0 5px rgba(245, 158, 11, 0.4); }
+  100% { box-shadow: 0 0 14px rgba(245, 158, 11, 0.9); }
+}
+
+.mvp-avatar {
+  background: linear-gradient(135deg, #f59e0b, #b45309) !important;
+  color: #fff !important;
+  border: 2px solid #fbbf24;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.55);
+}
+
+.pitch-player-card.is-mvp-card {
+  border: 1px solid rgba(245, 158, 11, 0.7);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.4), 0 4px 15px rgba(0, 0, 0, 0.5);
+  background: rgba(30, 26, 18, 0.92);
+}
+
+.pitch-mvp-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.pitch-jersey.mvp-jersey {
+  background: linear-gradient(135deg, #f59e0b, #b45309) !important;
+  border: 2px solid #fde68a;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.7) !important;
+}
+
+.form-group-checkbox {
+  padding: 10px 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--radius-md);
+  margin-top: 2px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #fde68a;
+}
+
 .player-actions-right {
   display: flex;
   align-items: center;
