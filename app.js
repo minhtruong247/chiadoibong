@@ -3,20 +3,20 @@
  * Thuật toán ghép cặp tương đương và phân bổ 2 đội cân bằng
  */
 
-// Danh sách 12 cầu thủ mặc định mẫu
+// Danh sách 12 cầu thủ chính thức mặc định của đội
 const DEFAULT_PLAYERS = [
-  { id: 'p1', name: 'Minh Tuấn (Gánh)', skill: 5, pos: 'MF', attending: true },
-  { id: 'p2', name: 'Hoàng Long (Nhạc trưởng)', skill: 5, pos: 'MF', attending: true },
-  { id: 'p3', name: 'Văn Đức (Thòng thép)', skill: 4, pos: 'DF', attending: true },
-  { id: 'p4', name: 'Quang Hải (Hậu vệ biên)', skill: 4, pos: 'DF', attending: true },
-  { id: 'p5', name: 'Thanh Tùng (Tiền đạo bén)', skill: 4, pos: 'FW', attending: true },
-  { id: 'p6', name: 'Đức Anh (Chân sút)', skill: 4, pos: 'FW', attending: true },
-  { id: 'p7', name: 'Hữu Nghĩa (Cánh dẻo)', skill: 3, pos: 'MF', attending: true },
-  { id: 'p8', name: 'Bảo Nam (Thể lực tốt)', skill: 3, pos: 'MF', attending: true },
-  { id: 'p9', name: 'Thành Đạt (Thủ môn 1)', skill: 3, pos: 'GK', attending: true },
-  { id: 'p10', name: 'Huy Hoàng (Thủ môn 2)', skill: 3, pos: 'GK', attending: true },
-  { id: 'p11', name: 'Tuấn Kiệt (Nhiệt tình)', skill: 2, pos: 'ALL', attending: true },
-  { id: 'p12', name: 'Văn Khang (Dưỡng sinh)', skill: 2, pos: 'ALL', attending: true }
+  { id: 'p1', name: 'Thiên Nhựt', skill: 5, pos: 'ALL', attending: true },
+  { id: 'p2', name: 'Trương Thuận', skill: 5, pos: 'ALL', attending: true },
+  { id: 'p3', name: 'Mai Con', skill: 5, pos: 'GK', attending: true },
+  { id: 'p4', name: 'Mai Kiên', skill: 4, pos: 'ALL', attending: true },
+  { id: 'p5', name: 'Nhựt Tiến', skill: 4, pos: 'ALL', attending: true },
+  { id: 'p6', name: 'Trung Trí', skill: 4, pos: 'MF', attending: true },
+  { id: 'p7', name: 'Sơn Đại Ca', skill: 3, pos: 'DF', attending: true },
+  { id: 'p8', name: 'Nhứt Đạt', skill: 3, pos: 'DF', attending: true },
+  { id: 'p9', name: 'Minh Trường', skill: 3, pos: 'ALL', attending: true },
+  { id: 'p10', name: 'Trí Dũng', skill: 3, pos: 'ALL', attending: true },
+  { id: 'p11', name: 'Trâu Đen', skill: 3, pos: 'GK', attending: true },
+  { id: 'p12', name: 'Anh Lượng', skill: 2, pos: 'ALL', attending: true }
 ];
 
 const SKILL_SCORES = { 5: 95, 4: 80, 3: 65, 2: 50, 1: 35 };
@@ -34,7 +34,7 @@ class FootballTeamApp {
 
   // LocalStorage Helpers
   loadPlayers() {
-    const saved = localStorage.getItem('fb_players');
+    const saved = localStorage.getItem('fb_players_v2');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) {}
     }
@@ -42,7 +42,7 @@ class FootballTeamApp {
   }
 
   savePlayers() {
-    localStorage.setItem('fb_players', JSON.stringify(this.players));
+    localStorage.setItem('fb_players_v2', JSON.stringify(this.players));
   }
 
   loadCustomPairs() {
