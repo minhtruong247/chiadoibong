@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chia Đội Bóng Đá - Ghép Cặp Tương Đương Cân Kèo</title>
+  <meta name="description"
+    content="Ứng dụng chia đội đá banh ghép cặp tương đương trình độ, tự động cân bằng lực lượng 2 đội cho nhóm 10-14 người, tối ưu cho GitHub Pages và Zalo." />
+
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="app-wrapper">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-group">
+        <div class="logo-icon">⚽</div>
+        <div>
+          <h1>Bóng Cười</h1>
+          <p class="subtitle">Chia Đội Đá Banh Ghép Cặp Cân Kèo Cho Nhóm 12 Người</p>
+        </div>
+      </div>
+      <div class="header-actions" style="display: none;">
+        <button id="btn-quick-rules" class="btn-ghost" title="Xem cơ chế chia">
+          <i class="fa-solid fa-circle-question"></i> Cách Chia Cặp
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-content">
+
+      <!-- Cột Trái: Danh Sách Cầu Thủ & Thiết Lập Cặp -->
+      <section class="panel players-panel">
+        <div class="panel-header">
+          <div class="title-with-badge">
+            <h2><i class="fa-solid fa-users"></i> Danh Sách Cầu Thủ</h2>
+            <span id="attending-count-badge" class="badge">12/12 Đang Chọn</span>
+          </div>
+          <div class="panel-actions">
+            <button id="btn-select-all" class="btn-sm btn-outline" title="Chọn tất cả">Chọn Hết</button>
+            <button id="btn-reset-default" class="btn-sm btn-outline" title="Khôi phục 12 người mặc định">Mặc
+              Định</button>
+          </div>
+        </div>
+
+        <!-- Khung thêm nhanh cầu thủ -->
+        <form id="add-player-form" class="add-player-card">
+          <div class="add-player-row-main">
+            <div class="input-icon-wrap">
+              <i class="fa-solid fa-user-plus input-icon"></i>
+              <input type="text" id="new-player-name" placeholder="Nhập tên cầu thủ mới..." required maxlength="25" autocomplete="off" />
+            </div>
+            <button type="submit" class="btn-primary btn-add-player" id="btn-add-player">
+              <i class="fa-solid fa-plus"></i> Thêm
+            </button>
+          </div>
+          <div class="add-player-row-sub">
+            <div class="select-field">
+              <label for="new-player-skill"><i class="fa-solid fa-star"></i> Trình độ</label>
+              <select id="new-player-skill" title="Trình độ">
+                <option value="5">⭐⭐⭐⭐⭐ (Siêu hay - 95đ)</option>
+                <option value="4" selected>⭐⭐⭐⭐ (Đá tốt - 80đ)</option>
+                <option value="3">⭐⭐⭐ (Khá/Ổn định - 65đ)</option>
+                <option value="2">⭐⭐ (Trung bình - 50đ)</option>
+                <option value="1">⭐ (Mới tập - 35đ)</option>
+              </select>
+            </div>
+            <div class="select-field">
+              <label for="new-player-pos"><i class="fa-solid fa-shield-halved"></i> Vị trí</label>
+              <select id="new-player-pos" title="Vị trí sở trường">
+                <option value="ALL" selected>⚽ Đa Năng</option>
+                <option value="GK">🧤 Thủ Môn (GK)</option>
+                <option value="DF">🛡️ Hậu Vệ (DF)</option>
+                <option value="MF">🎯 Tiền Vệ (MF)</option>
+                <option value="FW">⚡ Tiền Đạo (FW)</option>
+              </select>
+            </div>
+          </div>
+        </form>
+
+        <!-- Tab Chuyển Đổi: Danh Sách Cầu Thủ vs Cặp Đối Đầu Thủ Công -->
+        <div class="mode-tabs">
+          <button class="tab-btn active" data-tab="list-tab">
+            <i class="fa-solid fa-list-check"></i> Cầu Thủ & Điểm Danh
+          </button>
+          <button class="tab-btn" data-tab="custom-pair-tab">
+            <i class="fa-solid fa-handshake-simple"></i> Cặp Cố Định Riêng (<span id="custom-pairs-count">0</span>)
+          </button>
+        </div>
+
+        <!-- Tab 1: Danh sách có thể điểm danh/chỉnh sửa -->
+        <div id="list-tab" class="tab-content active">
+          <div class="players-list-scroll" id="players-list">
+            <!-- Render từ Javascript -->
+          </div>
+        </div>
+
+        <!-- Tab 2: Thiết lập cặp tương đương chỉ định trước -->
+        <div id="custom-pair-tab" class="tab-content">
+          <div class="custom-pair-tip">
+            <i class="fa-solid fa-lightbulb"></i>
+            Ghép cứng 2 người bạn muốn đối đầu nhau (ví dụ: 2 người gánh kèo hoặc 2 thủ môn). Khi chia, hệ thống sẽ bảo
+            đảm 1 người sang Đội Đỏ, 1 người sang Đội Xanh!
+          </div>
+          <div class="pair-creator">
+            <select id="pair-p1" title="Cầu thủ 1"></select>
+            <span class="vs-badge">VS</span>
+            <select id="pair-p2" title="Cầu thủ 2"></select>
+            <button id="btn-add-pair" class="btn-secondary">
+              <i class="fa-solid fa-plus"></i> Khóa Cặp
+            </button>
+          </div>
+          <div id="custom-pairs-list" class="custom-pairs-list">
+            <!-- Render danh sách cặp thủ công -->
+          </div>
+        </div>
+
+        <!-- Control Action Bar -->
+        <div class="action-footer">
+          <button id="btn-generate" class="btn-generate-team">
+            <i class="fa-solid fa-shuffle"></i> CHIA ĐỘI CÂN KÈO NGAY
+          </button>
+        </div>
+      </section>
+
+      <!-- Cột Phải: Kết Quả Chia Đội & Sân Bóng Trực Quan -->
+      <section class="panel pitch-panel">
+
+        <!-- Header trạng thái cân bằng -->
+        <div class="panel-header balance-header">
+          <h2><i class="fa-solid fa-trophy"></i> Kết Quả Đối Đầu</h2>
+          <div class="quick-tools">
+            <button id="btn-copy-zalo" class="btn-share-zalo" title="Sao chép danh sách đẹp để paste vào Zalo">
+              <i class="fa-solid fa-copy"></i> Copy Gửi Zalo
+            </button>
+            <button id="btn-reroll" class="btn-sm btn-outline" title="Xáo trộn lại các cặp">
+              <i class="fa-solid fa-rotate-right"></i> Đổi Bên
+            </button>
+          </div>
+        </div>
+
+        <!-- Thước đo độ cân bằng (Balance Meter) -->
+        <div class="balance-meter-card">
+          <div class="balance-meta">
+            <div class="team-meta team-blue-meta">
+              <span class="team-dot blue-dot"></span>
+              <span class="team-name">ĐỘI XANH</span>
+              <span class="team-pts" id="team-blue-score">0 đ</span>
+            </div>
+            <div class="balance-status" id="balance-status-text">
+              <span class="match-quality-pill">Chưa Chia Đội</span>
+            </div>
+            <div class="team-meta team-red-meta">
+              <span class="team-pts" id="team-red-score">0 đ</span>
+              <span class="team-name">ĐỘI ĐỎ</span>
+              <span class="team-dot red-dot"></span>
+            </div>
+          </div>
+          <div class="balance-bar-wrapper">
+            <div class="balance-bar-fill-blue" id="balance-bar-blue" style="width: 50%;"></div>
+            <div class="balance-bar-center-pin"></div>
+            <div class="balance-bar-fill-red" id="balance-bar-red" style="width: 50%;"></div>
+          </div>
+        </div>
+
+        <!-- Mô phỏng sân bóng cỏ 2D -->
+        <div class="pitch-container" id="pitch-container">
+          <div class="pitch-surface">
+            <!-- Vạch kẻ sân -->
+            <div class="pitch-marking penalty-box left"></div>
+            <div class="pitch-marking goal-box left"></div>
+            <div class="pitch-marking center-line"></div>
+            <div class="pitch-marking center-circle"></div>
+            <div class="pitch-marking center-spot"></div>
+            <div class="pitch-marking penalty-box right"></div>
+            <div class="pitch-marking goal-box right"></div>
+
+            <!-- Vùng hiển thị cầu thủ Đội Xanh (Bên Trái) -->
+            <div class="pitch-team-zone blue-zone" id="pitch-blue-zone">
+              <!-- Render thẻ cầu thủ Đội Xanh trên sân -->
+            </div>
+
+            <!-- Vùng hiển thị cầu thủ Đội Đỏ (Bên Phải) -->
+            <div class="pitch-team-zone red-zone" id="pitch-red-zone">
+              <!-- Render thẻ cầu thủ Đội Đỏ trên sân -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Danh sách chi tiết các cặp đã được so kè & chia bên -->
+        <div class="pairs-breakdown-card">
+          <div class="breakdown-title">
+            <span><i class="fa-solid fa-scale-balanced"></i> Chi tiết từng cặp đối đầu (1 người Đội Xanh vs 1 người Đội
+              Đỏ)</span>
+          </div>
+          <div class="pairs-breakdown-list" id="pairs-breakdown-list">
+            <p class="placeholder-msg">Nhấn nút <strong>"CHIA ĐỘI CÂN KÈO NGAY"</strong> để phân cặp tương đương và phân
+              bổ 2 phe.</p>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Modal Hướng Dẫn / Luật Chia -->
+    <div id="rules-modal" class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-futbol"></i> Nguyên Lý Ghép Cặp Cân Bằng</h3>
+          <button id="btn-close-modal" class="btn-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="rule-step">
+            <span class="step-num">1</span>
+            <div>
+              <h4>Khóa cặp đối đầu đặc biệt (Tùy chọn)</h4>
+              <p>Nếu nhóm có 2 người gánh team siêu hay hoặc 2 thủ môn, bạn có thể vào tab <strong>"Cặp Cố Định
+                  Riêng"</strong> để khóa họ lại với nhau.</p>
+            </div>
+          </div>
+          <div class="rule-step">
+            <span class="step-num">2</span>
+            <div>
+              <h4>Tự động tìm đối thủ tương xứng</h4>
+              <p>Những cầu thủ còn lại sẽ được thuật toán sắp xếp theo điểm trình độ & vị trí thi đấu, gom 2 người có
+                trình độ sát nhau nhất thành một cặp.</p>
+            </div>
+          </div>
+          <div class="rule-step">
+            <span class="step-num">3</span>
+            <div>
+              <h4>Tung đồng xu ngẫu nhiên vào 2 phe</h4>
+              <p>Mỗi cặp sẽ được bốc thăm ngẫu nhiên: <strong>1 người sang Đội Xanh, 1 người sang Đội Đỏ</strong>. Điều
+                này đảm bảo cả 2 đội luôn có số lượng và chất lượng cầu thủ tương đương nhau 100%!</p>
+            </div>
+          </div>
+          <div class="rule-step">
+            <span class="step-num">4</span>
+            <div>
+              <h4>Đưa lên GitHub Pages miễn phí</h4>
+              <p>Trang web này viết bằng HTML/CSS/JS thuần, bạn chỉ cần tạo repository trên GitHub, upload toàn bộ tệp
+                lên và bật <strong>Settings -> Pages</strong> là có ngay link web chia sẻ cho anh em trong đội bóng!</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-modal-ok" class="btn-primary">Đã Hiểu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Chỉnh Sửa Thông Tin Cầu Thủ -->
+    <div id="edit-player-modal" class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-user-pen"></i> Chỉnh Sửa Cầu Thủ</h3>
+          <button id="btn-close-edit-modal" class="btn-close">&times;</button>
+        </div>
+        <form id="edit-player-form" class="edit-modal-form">
+          <input type="hidden" id="edit-player-id" />
+          <div class="form-group">
+            <label for="edit-player-name">Tên cầu thủ / Biệt danh:</label>
+            <input type="text" id="edit-player-name" required maxlength="30" placeholder="Nhập tên cầu thủ..." />
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="edit-player-skill">Trình độ kỹ năng:</label>
+              <select id="edit-player-skill">
+                <option value="5">⭐⭐⭐⭐⭐ (Siêu hay - 95đ)</option>
+                <option value="4">⭐⭐⭐⭐ (Đá tốt - 80đ)</option>
+                <option value="3">⭐⭐⭐ (Khá/Ổn - 65đ)</option>
+                <option value="2">⭐⭐ (Trung bình - 50đ)</option>
+                <option value="1">⭐ (Mới tập - 35đ)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="edit-player-pos">Vị trí sở trường:</label>
+              <select id="edit-player-pos">
+                <option value="ALL">Đa Năng (ALL)</option>
+                <option value="GK">Thủ Môn (GK)</option>
+                <option value="DF">Hậu Vệ (DF)</option>
+                <option value="MF">Tiền Vệ (MF)</option>
+                <option value="FW">Tiền Đạo (FW)</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer edit-modal-footer">
+            <button type="button" id="btn-cancel-edit" class="btn-secondary">Hủy Bỏ</button>
+            <button type="submit" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Toast Thông Báo -->
+    <div id="toast" class="toast">Đã sao chép danh sách vào bộ nhớ tạm!</div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
