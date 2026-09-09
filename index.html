@@ -93,13 +93,16 @@
           </div>
         </form>
 
-        <!-- Tab Chuyển Đổi: Danh Sách Cầu Thủ vs Cặp Đối Đầu Thủ Công -->
+        <!-- Tab Chuyển Đổi: Danh Sách Cầu Thủ vs Cặp Đối Đầu Thủ Công vs Lịch Sử -->
         <div class="mode-tabs">
           <button class="tab-btn active" data-tab="list-tab">
-            <i class="fa-solid fa-list-check"></i> Cầu Thủ & Điểm Danh
+            <i class="fa-solid fa-list-check"></i> Cầu Thủ
           </button>
           <button class="tab-btn" data-tab="custom-pair-tab">
-            <i class="fa-solid fa-handshake-simple"></i> Cặp Cố Định Riêng (<span id="custom-pairs-count">0</span>)
+            <i class="fa-solid fa-handshake-simple"></i> Cặp Cố Định (<span id="custom-pairs-count">0</span>)
+          </button>
+          <button class="tab-btn" data-tab="history-tab">
+            <i class="fa-solid fa-clock-rotate-left"></i> Lịch Sử (<span id="match-history-count">0</span>)
           </button>
         </div>
 
@@ -132,10 +135,39 @@
           </div>
         </div>
 
+        <!-- Tab 3: Lịch Sử Chia Đội & Thống Kê -->
+        <div id="history-tab" class="tab-content">
+          <!-- Bảng Thống Kê Cầu Thủ -->
+          <div class="stats-section">
+            <div class="stats-header">
+              <h3><i class="fa-solid fa-chart-column"></i> Bảng Xếp Hạng Cầu Thủ</h3>
+            </div>
+            <div id="player-stats-table" class="player-stats-table">
+              <p class="placeholder-msg">Chưa có dữ liệu thống kê. Hãy chia đội và cập nhật kết quả trận đấu!</p>
+            </div>
+          </div>
+
+          <!-- Danh Sách Lịch Sử Trận Đấu -->
+          <div class="history-section">
+            <div class="history-header">
+              <h3><i class="fa-solid fa-scroll"></i> Lịch Sử Các Trận</h3>
+              <button id="btn-clear-history" class="btn-sm btn-outline" title="Xóa toàn bộ lịch sử">
+                <i class="fa-solid fa-trash-can"></i> Xóa Hết
+              </button>
+            </div>
+            <div id="match-history-list" class="match-history-list">
+              <p class="placeholder-msg">Chưa có trận nào được lưu. Nhấn "CHIA ĐỘI CÂN KÈO NGAY" để tạo trận mới!</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Control Action Bar -->
         <div class="action-footer">
           <button id="btn-generate" class="btn-generate-team">
             <i class="fa-solid fa-shuffle"></i> CHIA ĐỘI CÂN KÈO NGAY
+          </button>
+          <button id="btn-manual-split" class="btn-manual-split" title="Tự phân chia cầu thủ vào Đội Xanh và Đội Đỏ">
+            <i class="fa-solid fa-hand"></i> Chia Đội Thủ Công
           </button>
         </div>
       </section>
@@ -316,7 +348,149 @@
       </div>
     </div>
 
-    <!-- Toast Thông Báo -->
+    <!-- Modal Cập Nhật Kết Quả Trận Đấu -->
+    <div id="result-modal" class="modal-backdrop">
+      <div class="modal-card result-modal-card">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-trophy"></i> Cập Nhật Kết Quả Trận Đấu</h3>
+          <button id="btn-close-result-modal" class="btn-close">&times;</button>
+        </div>
+        <div class="modal-body result-modal-body">
+          <input type="hidden" id="result-match-id" />
+          <div class="result-match-info" id="result-match-info">
+            <!-- Hiển thị thông tin trận đấu -->
+          </div>
+          <div class="result-winner-select">
+            <label>Đội thắng:</label>
+            <div class="winner-options">
+              <button type="button" class="winner-btn blue-winner" data-winner="blue">
+                <i class="fa-solid fa-shield"></i> Đội Xanh Thắng
+              </button>
+              <button type="button" class="winner-btn draw-winner" data-winner="draw">
+                <i class="fa-solid fa-equals"></i> Hòa
+              </button>
+              <button type="button" class="winner-btn red-winner" data-winner="red">
+                <i class="fa-solid fa-shield"></i> Đội Đỏ Thắng
+              </button>
+            </div>
+          </div>
+          <div class="result-score-input">
+            <label>Tỷ số bàn thắng (tuỳ chọn):</label>
+            <div class="score-inputs">
+              <div class="score-field blue-score-field">
+                <span>🔵 Xanh</span>
+                <input type="number" id="result-goal-blue" min="0" max="99" placeholder="0" />
+              </div>
+              <span class="score-dash">—</span>
+              <div class="score-field red-score-field">
+                <input type="number" id="result-goal-red" min="0" max="99" placeholder="0" />
+                <span>Đỏ 🔴</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="btn-cancel-result" class="btn-secondary">Hủy</button>
+          <button type="button" id="btn-save-result" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Kết Quả</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Xem Chi Tiết Đội Hình Trận Cũ -->
+    <div id="history-detail-modal" class="modal-backdrop">
+      <div class="modal-card history-detail-modal-card">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-futbol"></i> Chi Tiết Đội Hình</h3>
+          <button id="btn-close-history-detail" class="btn-close">&times;</button>
+        </div>
+        <div class="modal-body" id="history-detail-body">
+          <!-- Render chi tiết đội hình -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="btn-close-history-detail-ok" class="btn-primary">Đóng</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Chia Đội Thủ Công -->
+    <div id="manual-modal" class="modal-backdrop">
+      <div class="modal-card manual-modal-card">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-hand"></i> Chia Đội Thủ Công</h3>
+          <button id="btn-close-manual-modal" class="btn-close">&times;</button>
+        </div>
+        <div class="modal-body manual-modal-body">
+          <!-- Bảng đo độ cân bằng trực tiếp khi chọn -->
+          <div class="manual-meter-card">
+            <div class="manual-meter-meta">
+              <div class="manual-team-badge blue-badge">
+                🔵 ĐỘI XANH: <span id="manual-blue-count">0</span> người (<span id="manual-blue-score">0</span>đ)
+              </div>
+              <div id="manual-diff-badge" class="manual-diff-badge">Lệch: 0đ</div>
+              <div class="manual-team-badge red-badge">
+                🔴 ĐỘI ĐỎ: <span id="manual-red-count">0</span> người (<span id="manual-red-score">0</span>đ)
+              </div>
+            </div>
+            <div class="manual-bar-wrap">
+              <div id="manual-bar-blue" class="manual-bar-fill-blue" style="width: 50%;"></div>
+              <div class="manual-bar-pin"></div>
+              <div id="manual-bar-red" class="manual-bar-fill-red" style="width: 50%;"></div>
+            </div>
+          </div>
+
+          <!-- Bố cục 3 cột chia đội -->
+          <div class="manual-columns-grid">
+            <!-- Cột 1: Đội Xanh -->
+            <div class="manual-col manual-col-blue">
+              <div class="manual-col-header">
+                <h4><i class="fa-solid fa-shield"></i> Đội Xanh</h4>
+                <span id="manual-blue-pill" class="manual-col-pill blue-pill">0</span>
+              </div>
+              <div id="manual-blue-list" class="manual-col-list">
+                <!-- Danh sách cầu thủ Đội Xanh -->
+              </div>
+            </div>
+
+            <!-- Cột 2: Chưa Chọn (Ở giữa) -->
+            <div class="manual-col manual-col-unassigned">
+              <div class="manual-col-header">
+                <h4><i class="fa-solid fa-users"></i> Chưa Chọn</h4>
+                <span id="manual-unassigned-pill" class="manual-col-pill">0</span>
+              </div>
+              <div class="manual-quick-actions">
+                <button type="button" id="btn-manual-autofill" class="btn-sm btn-autofill" title="Tự động cân bằng số người còn lại vào 2 đội">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Chia Tự Động Phần Còn Lại
+                </button>
+                <button type="button" id="btn-manual-reset" class="btn-sm btn-outline" title="Chuyển tất cả về chưa chọn">
+                  <i class="fa-solid fa-rotate-left"></i> Đặt Lại
+                </button>
+              </div>
+              <div id="manual-unassigned-list" class="manual-col-list">
+                <!-- Danh sách cầu thủ chưa chọn -->
+              </div>
+            </div>
+
+            <!-- Cột 3: Đội Đỏ -->
+            <div class="manual-col manual-col-red">
+              <div class="manual-col-header">
+                <h4><i class="fa-solid fa-shield"></i> Đội Đỏ</h4>
+                <span id="manual-red-pill" class="manual-col-pill red-pill">0</span>
+              </div>
+              <div id="manual-red-list" class="manual-col-list">
+                <!-- Danh sách cầu thủ Đội Đỏ -->
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer manual-modal-footer">
+          <button type="button" id="btn-cancel-manual" class="btn-secondary">Hủy</button>
+          <button type="button" id="btn-apply-manual" class="btn-primary">
+            <i class="fa-solid fa-check-double"></i> Áp Dụng & Hiển Thị Lên Sân
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div id="toast" class="toast">Đã sao chép danh sách vào bộ nhớ tạm!</div>
 
   </div>
