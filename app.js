@@ -71,10 +71,24 @@ class FootballTeamApp {
     localStorage.setItem('fb_custom_pairs', JSON.stringify(this.customPairs));
   }
 
+  sanitizeMatchRecord(m) {
+    if (!m || typeof m !== 'object') return null;
+    return {
+      ...m,
+      goalScoreBlue: (typeof m.goalScoreBlue === 'number' && !isNaN(m.goalScoreBlue)) ? m.goalScoreBlue : null,
+      goalScoreRed: (typeof m.goalScoreRed === 'number' && !isNaN(m.goalScoreRed)) ? m.goalScoreRed : null
+    };
+  }
+
   loadMatchHistoryLocal() {
     const saved = localStorage.getItem('fb_match_history');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map(m => this.sanitizeMatchRecord(m)).filter(Boolean);
+        }
+      } catch (e) {}
     }
     return [];
   }
@@ -168,14 +182,18 @@ class FootballTeamApp {
           if (snapshot.exists()) {
             const data = snapshot.val();
             const list = Array.isArray(data) ? data : Object.values(data);
-            this.matchHistory = list.filter(m => m && m.matchId);
+            this.matchHistory = list
+              .filter(m => m && m.matchId)
+              .map(m => this.sanitizeMatchRecord(m));
             this.saveMatchHistoryLocal();
             this.renderHistory();
             this.renderPlayerStats();
+            this.updateMatchActionUI();
           } else {
             this.matchHistory = [];
             this.renderHistory();
             this.renderPlayerStats();
+            this.updateMatchActionUI();
           }
         });
       } else {
@@ -225,6 +243,16 @@ class FootballTeamApp {
     this.balanceBarRed = document.getElementById('balance-bar-red');
     this.balanceStatusText = document.getElementById('balance-status-text');
     this.pairsBreakdownList = document.getElementById('pairs-breakdown-list');
+
+    // Match Confirmation & Action Bar Elements
+    this.matchConfirmBox = document.getElementById('match-confirm-box');
+    this.btnLockMatch = document.getElementById('btn-lock-match');
+    this.matchLockedBox = document.getElementById('match-locked-box');
+    this.btnOpenResultCurrent = document.getElementById('btn-open-result-current');
+    this.lockedCardTitle = document.getElementById('locked-card-title');
+    this.lockedCardDesc = document.getElementById('locked-card-desc');
+    this.currentMatchLocked = false;
+    this.currentLockedMatchId = null;
 
     // Modal & Tabs
     this.rulesModal = document.getElementById('rules-modal');
@@ -333,6 +361,18 @@ class FootballTeamApp {
     this.btnGenerate.addEventListener('click', () => this.generateBalancedTeams());
     this.btnReroll.addEventListener('click', () => this.rerollTeams());
 
+    // Nút Chốt Đội Hình & Nút Cập Nhật Kết Quả Nhanh
+    if (this.btnLockMatch) {
+      this.btnLockMatch.addEventListener('click', () => this.lockAndSaveMatch());
+    }
+    if (this.btnOpenResultCurrent) {
+      this.btnOpenResultCurrent.addEventListener('click', () => {
+        if (this.currentLockedMatchId) {
+          this.openResultModal(this.currentLockedMatchId);
+        }
+      });
+    }
+
     // Nút Copy Zalo
     this.btnCopyZalo.addEventListener('click', () => this.copyResultToZalo());
 
@@ -393,9 +433,12 @@ class FootballTeamApp {
       if (this.matchHistory.length === 0) return;
       if (confirm('Xóa toàn bộ lịch sử trận đấu? Hành động này không thể hoàn tác!')) {
         this.matchHistory = [];
+        this.currentMatchLocked = false;
+        this.currentLockedMatchId = null;
         this.saveMatchHistory();
         this.renderHistory();
         this.renderPlayerStats();
+        this.updateMatchActionUI();
         this.showToast('Đã xóa toàn bộ lịch sử trận đấu');
       }
     });
@@ -686,34 +729,12 @@ class FootballTeamApp {
       this.db.ref('football/currentResult').set(this.currentResult).catch(e => console.warn('Lỗi ghi Firebase:', e));
     }
 
+    this.currentMatchLocked = false;
+    this.currentLockedMatchId = null;
     this.renderResult();
+    this.updateMatchActionUI();
 
-    // Lưu vào lịch sử trận đấu
-    const now = new Date();
-    const matchRecord = {
-      matchId: 'match_' + Date.now(),
-      date: now.toLocaleDateString('vi-VN'),
-      time: now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-      teamBlue: teamBlue.map(p => ({ id: p.id, name: p.name, skill: p.skill, pos: p.pos, isMvp: p.isMvp || false })),
-      teamRed: teamRed.map(p => ({ id: p.id, name: p.name, skill: p.skill, pos: p.pos, isMvp: p.isMvp || false })),
-      blueScore,
-      redScore,
-      pairs: pairedResults.map(pr => ({
-        blue: pr.blue ? { id: pr.blue.id, name: pr.blue.name } : null,
-        red: pr.red ? { id: pr.red.id, name: pr.red.name } : null,
-        isManual: pr.isManual
-      })),
-      result: null,
-      goalScoreBlue: null,
-      goalScoreRed: null
-    };
-
-    this.matchHistory.unshift(matchRecord);
-    this.saveMatchHistory();
-    this.renderHistory();
-    this.renderPlayerStats();
-
-    this.showToast('⚽ Đã chia cặp cân bằng thành công!');
+    this.showToast('⚽ Đã chia cặp cân bằng! Bấm "Chốt Đội Hình" để lưu trận');
   }
 
   // Đổi bên ngẫu nhiên cho các cặp hiện tại
@@ -785,6 +806,8 @@ class FootballTeamApp {
       `;
       this.pairsBreakdownList.appendChild(row);
     });
+
+    this.updateMatchActionUI();
   }
 
   createPitchCard(player, teamColor) {
@@ -867,6 +890,85 @@ class FootballTeamApp {
     }
 
     this.renderResult();
+  }
+
+  // Chốt đội hình và lưu trận đấu vào Lịch Sử
+  lockAndSaveMatch() {
+    if (!this.currentResult || !this.currentResult.teamBlue || this.currentResult.teamBlue.length === 0) {
+      alert('Vui lòng chia đội trước khi chốt!');
+      return;
+    }
+
+    const { teamBlue, teamRed, blueScore, redScore, pairs } = this.currentResult;
+    const now = new Date();
+    const matchId = 'match_' + Date.now();
+    const matchRecord = {
+      matchId,
+      date: now.toLocaleDateString('vi-VN'),
+      time: now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      teamBlue: teamBlue.map(p => ({ id: p.id, name: p.name, skill: p.skill, pos: p.pos, isMvp: p.isMvp || false })),
+      teamRed: teamRed.map(p => ({ id: p.id, name: p.name, skill: p.skill, pos: p.pos, isMvp: p.isMvp || false })),
+      blueScore,
+      redScore,
+      pairs: pairs ? pairs.map(pr => ({
+        blue: pr.blue ? { id: pr.blue.id, name: pr.blue.name } : null,
+        red: pr.red ? { id: pr.red.id, name: pr.red.name } : null,
+        isManual: !!pr.isManual
+      })) : [],
+      result: null,
+      goalScoreBlue: null,
+      goalScoreRed: null
+    };
+
+    this.matchHistory.unshift(matchRecord);
+    this.saveMatchHistory();
+    this.renderHistory();
+    this.renderPlayerStats();
+
+    this.currentMatchLocked = true;
+    this.currentLockedMatchId = matchId;
+    this.updateMatchActionUI();
+
+    this.showToast('✅ Đã chốt đội hình thành công! Hãy cập nhật kết quả sau khi đá.');
+  }
+
+  // Cập nhật giao diện khung hành động Chốt Đội Hình / Cập Nhật Kết Quả
+  updateMatchActionUI() {
+    if (!this.matchConfirmBox || !this.matchLockedBox) return;
+
+    if (!this.currentResult || !this.currentResult.teamBlue || this.currentResult.teamBlue.length === 0) {
+      this.matchConfirmBox.style.display = 'none';
+      this.matchLockedBox.style.display = 'none';
+      return;
+    }
+
+    if (!this.currentMatchLocked) {
+      this.matchConfirmBox.style.display = 'flex';
+      this.matchLockedBox.style.display = 'none';
+    } else {
+      this.matchConfirmBox.style.display = 'none';
+      this.matchLockedBox.style.display = 'flex';
+
+      const currentMatch = this.matchHistory.find(m => m.matchId === this.currentLockedMatchId);
+      if (currentMatch && currentMatch.result) {
+        let resText = currentMatch.result === 'blue' ? '🔵 Đội Xanh Thắng' :
+                      currentMatch.result === 'red' ? '🔴 Đội Đỏ Thắng' : '🤝 Trận Đấu Hòa';
+        if (typeof currentMatch.goalScoreBlue === 'number' && typeof currentMatch.goalScoreRed === 'number') {
+          resText += ` (${currentMatch.goalScoreBlue} - ${currentMatch.goalScoreRed})`;
+        }
+        if (this.lockedCardTitle) this.lockedCardTitle.textContent = `Kết quả: ${resText}`;
+        if (this.lockedCardDesc) this.lockedCardDesc.textContent = 'Đã lưu và tính điểm vào Bảng Xếp Hạng.';
+        if (this.btnOpenResultCurrent) {
+          this.btnOpenResultCurrent.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Sửa Kết Quả Trận Này';
+        }
+      } else {
+        if (this.lockedCardTitle) this.lockedCardTitle.textContent = 'Đội hình đã được chốt!';
+        if (this.lockedCardDesc) this.lockedCardDesc.textContent = 'Trận đấu đã lưu vào Lịch Sử. Hãy cập nhật kết quả sau khi đá xong:';
+        if (this.btnOpenResultCurrent) {
+          this.btnOpenResultCurrent.innerHTML = '<i class="fa-solid fa-trophy"></i> Cập Nhật Kết Quả / Tỷ Số';
+        }
+      }
+    }
   }
 
   copyResultToZalo() {
@@ -1051,10 +1153,23 @@ class FootballTeamApp {
 
       card.className = `match-history-card ${resultClass}`;
 
-      let scoreDisplay = 'VS';
-      if (match.goalScoreBlue !== null && match.goalScoreRed !== null) {
-        scoreDisplay = `<span class="goal-blue">${match.goalScoreBlue}</span> - <span class="goal-red">${match.goalScoreRed}</span>`;
+      // Làm sạch và kiểm tra tỷ số chặt chẽ
+      const hasGoalBlue = typeof match.goalScoreBlue === 'number' && !isNaN(match.goalScoreBlue);
+      const hasGoalRed = typeof match.goalScoreRed === 'number' && !isNaN(match.goalScoreRed);
+
+      let scoreDisplay = '';
+      if (hasGoalBlue && hasGoalRed) {
+        scoreDisplay = `<div class="match-big-score"><span class="goal-blue">${match.goalScoreBlue}</span> <span class="score-sep">-</span> <span class="goal-red">${match.goalScoreRed}</span></div>`;
+      } else if (match.result === 'blue' || match.result === 'red' || match.result === 'draw') {
+        const text = match.result === 'draw' ? 'HÒA' : (match.result === 'blue' ? 'XANH THẮNG' : 'ĐỎ THẮNG');
+        scoreDisplay = `<div class="match-vs-tag">${text}</div>`;
+      } else {
+        scoreDisplay = `<div class="match-vs-tag pending"><i class="fa-regular fa-clock"></i> Chưa có tỷ số</div>`;
       }
+
+      const updateBtnHtml = match.result
+        ? `<button class="btn-update-result" data-match-id="${match.matchId}" title="Sửa kết quả"><i class="fa-solid fa-pen-to-square"></i> Sửa KQ</button>`
+        : `<button class="btn-update-result btn-needs-result" data-match-id="${match.matchId}" title="Nhập kết quả trận đấu"><i class="fa-solid fa-trophy"></i> Nhập Kết Quả</button>`;
 
       card.innerHTML = `
         <div class="match-card-top">
@@ -1074,11 +1189,9 @@ class FootballTeamApp {
         </div>
         <div class="match-card-actions">
           <button class="btn-view-detail" data-match-id="${match.matchId}" title="Xem đội hình">
-            <i class="fa-solid fa-eye"></i> Đội Hình
+            <i class="fa-solid fa-users"></i> Đội Hình
           </button>
-          <button class="btn-update-result" data-match-id="${match.matchId}" title="Cập nhật kết quả">
-            <i class="fa-solid fa-pen"></i> ${match.result ? 'Sửa KQ' : 'Cập Nhật KQ'}
-          </button>
+          ${updateBtnHtml}
           <button class="btn-delete-match" data-match-id="${match.matchId}" title="Xóa trận này">
             <i class="fa-solid fa-trash-can"></i>
           </button>
@@ -1147,6 +1260,7 @@ class FootballTeamApp {
     this.saveMatchHistory();
     this.renderHistory();
     this.renderPlayerStats();
+    this.updateMatchActionUI();
     this.closeResultModal();
 
     const resultText = this.selectedWinner === 'blue' ? '🔵 Đội Xanh Thắng' :
@@ -1209,9 +1323,14 @@ class FootballTeamApp {
     if (!confirm('Xóa trận đấu này khỏi lịch sử?')) return;
 
     this.matchHistory = this.matchHistory.filter(m => m.matchId !== matchId);
+    if (this.currentLockedMatchId === matchId) {
+      this.currentMatchLocked = false;
+      this.currentLockedMatchId = null;
+    }
     this.saveMatchHistory();
     this.renderHistory();
     this.renderPlayerStats();
+    this.updateMatchActionUI();
     this.showToast('Đã xóa trận đấu');
   }
 
@@ -1488,36 +1607,13 @@ class FootballTeamApp {
       this.db.ref('football/currentResult').set(this.currentResult).catch(e => console.warn('Lỗi ghi Firebase:', e));
     }
 
+    this.currentMatchLocked = false;
+    this.currentLockedMatchId = null;
     this.renderResult();
-
-    // Lưu vào lịch sử trận đấu
-    const now = new Date();
-    const matchRecord = {
-      matchId: 'match_' + Date.now(),
-      date: now.toLocaleDateString('vi-VN'),
-      time: now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-      teamBlue: this.manualBlue.map(p => ({ id: p.id, name: p.name, skill: p.skill, pos: p.pos, isMvp: p.isMvp || false })),
-      teamRed: this.manualRed.map(p => ({ id: p.id, name: p.name, skill: p.skill, pos: p.pos, isMvp: p.isMvp || false })),
-      blueScore,
-      redScore,
-      pairs: pairedResults.map(pr => ({
-        blue: pr.blue ? { id: pr.blue.id, name: pr.blue.name } : null,
-        red: pr.red ? { id: pr.red.id, name: pr.red.name } : null,
-        isManual: true
-      })),
-      result: null,
-      goalScoreBlue: null,
-      goalScoreRed: null,
-      isManualDivision: true
-    };
-
-    this.matchHistory.unshift(matchRecord);
-    this.saveMatchHistory();
-    this.renderHistory();
-    this.renderPlayerStats();
+    this.updateMatchActionUI();
 
     this.closeManualModal();
-    this.showToast('⚽ Đã áp dụng đội hình chia thủ công!');
+    this.showToast('⚽ Đã tạo đội hình! Bấm "Chốt Đội Hình" để lưu trận');
   }
 
   renderManualModal() {

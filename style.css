@@ -477,32 +477,45 @@ button {
 
 /* ==================== TABS ==================== */
 .mode-tabs {
-  display: flex;
-  gap: 8px;
-  background: #0f172a;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  background: #0b1322;
   padding: 4px;
   border-radius: var(--radius-md);
   margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .tab-btn {
-  flex: 1;
-  padding: 8px 12px;
+  padding: 8px 4px;
   background: transparent;
   color: var(--text-muted);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 600;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.tab-btn i {
+  font-size: 0.8rem;
+}
+
+.tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .tab-btn.active {
   background: #1e293b;
   color: #fff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .tab-content {
@@ -933,6 +946,137 @@ button {
   transform: translateX(-50%);
   box-shadow: 0 0 6px #fff;
   z-index: 2;
+}
+
+/* ==================== MATCH ACTION BAR (CONFIRM & RECORD) ==================== */
+.match-action-card {
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  animation: slideDown 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.match-action-card.confirm-mode {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(6, 78, 59, 0.35));
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+}
+
+.match-action-card.locked-mode {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(30, 41, 59, 0.8));
+  border: 1px solid rgba(14, 165, 233, 0.4);
+  box-shadow: 0 4px 20px rgba(14, 165, 233, 0.2);
+}
+
+.match-action-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.action-icon-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.pulse-green {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.5);
+  animation: pulseGreenGlow 2s infinite;
+}
+
+@keyframes pulseGreenGlow {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+  70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.green-solid {
+  background: #10b981;
+  color: #fff;
+  box-shadow: 0 0 12px var(--primary-glow);
+}
+
+.action-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.action-card-title {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.action-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.btn-lock-match {
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.92rem;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.btn-lock-match:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+  box-shadow: 0 6px 22px rgba(16, 185, 129, 0.6);
+}
+
+.btn-record-now {
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.88rem;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.btn-record-now:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
 }
 
 /* ==================== FOOTBALL PITCH ==================== */
@@ -1558,10 +1702,12 @@ button {
   }
 }
 
-/* ==================== MATCH HISTORY TAB ==================== */
-.stats-section,
-.history-section {
-  margin-bottom: 18px;
+/* ==================== STANDALONE RANK & HISTORY TABS ==================== */
+.stats-section-standalone,
+.history-section-standalone {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .stats-header,
@@ -1569,13 +1715,26 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  padding: 4px 2px;
+}
+
+.stats-title-group,
+.history-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stats-subtitle,
+.history-subtitle {
+  font-size: 0.74rem;
+  color: var(--text-muted);
 }
 
 .stats-header h3,
 .history-header h3 {
   font-family: var(--font-heading);
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   font-weight: 700;
   color: var(--text-main);
   display: flex;
@@ -1584,7 +1743,20 @@ button {
 }
 
 .stats-header h3 i { color: #f59e0b; }
-.history-header h3 i { color: var(--primary-accent); }
+.history-header h3 i { color: #38bdf8; }
+
+.btn-clear-history {
+  padding: 4px 8px;
+  font-size: 0.74rem;
+  border-radius: var(--radius-sm);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.btn-clear-history:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
 
 /* ==================== PLAYER STATS TABLE ==================== */
 .player-stats-table {
@@ -1592,6 +1764,8 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-md);
   overflow: hidden;
+  max-height: 480px;
+  overflow-y: auto;
 }
 
 .stats-table {
@@ -1822,42 +1996,74 @@ button {
   font-size: 1.4rem;
   font-weight: 800;
   color: var(--text-main);
-  padding: 0 6px;
+  padding: 0 8px;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.match-score-display .goal-blue { color: var(--team-blue); }
-.match-score-display .goal-red { color: var(--team-red); }
+.match-big-score {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.45rem;
+}
+
+.match-big-score .goal-blue { color: var(--team-blue); }
+.match-big-score .goal-red { color: var(--team-red); }
+.match-big-score .score-sep { color: var(--text-dim); font-size: 1.1rem; }
+
+.match-vs-tag {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+.match-vs-tag.pending {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px dashed rgba(245, 158, 11, 0.4);
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
 
 .match-card-actions {
   display: flex;
   gap: 6px;
   justify-content: flex-end;
-  padding-top: 6px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .match-card-actions button {
-  font-size: 0.72rem;
-  padding: 4px 10px;
+  font-size: 0.74rem;
+  padding: 6px 12px;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
+  font-weight: 600;
 }
 
 .match-card-actions button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   color: var(--text-main);
 }
 
 .match-card-actions .btn-update-result {
-  border-color: rgba(16, 185, 129, 0.3);
+  border-color: rgba(16, 185, 129, 0.4);
   color: var(--primary-accent);
 }
 
@@ -1865,8 +2071,22 @@ button {
   background: rgba(16, 185, 129, 0.15);
 }
 
+.match-card-actions .btn-update-result.btn-needs-result {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  border-color: #f59e0b;
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.35);
+}
+
+.match-card-actions .btn-update-result.btn-needs-result:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.5);
+}
+
 .match-card-actions .btn-delete-match {
-  border-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.25);
   color: #ef4444;
 }
 
@@ -2451,3 +2671,26 @@ button {
     text-align: center;
   }
 }
+
+@media (max-width: 540px) {
+  .mode-tabs {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .match-action-card {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 10px;
+  }
+  .match-action-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  .btn-lock-match,
+  .btn-record-now {
+    width: 100%;
+    justify-content: center;
+  }
+}
+

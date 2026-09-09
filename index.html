@@ -93,15 +93,18 @@
           </div>
         </form>
 
-        <!-- Tab Chuyển Đổi: Danh Sách Cầu Thủ vs Cặp Đối Đầu Thủ Công vs Lịch Sử -->
+        <!-- Tab Chuyển Đổi: 4 Tab Độc Lập -->
         <div class="mode-tabs">
-          <button class="tab-btn active" data-tab="list-tab">
-            <i class="fa-solid fa-list-check"></i> Cầu Thủ
+          <button class="tab-btn active" data-tab="list-tab" title="Danh sách điểm danh cầu thủ">
+            <i class="fa-solid fa-users"></i> Cầu Thủ
           </button>
-          <button class="tab-btn" data-tab="custom-pair-tab">
-            <i class="fa-solid fa-handshake-simple"></i> Cặp Cố Định (<span id="custom-pairs-count">0</span>)
+          <button class="tab-btn" data-tab="custom-pair-tab" title="Khóa cặp đối đầu tương đương">
+            <i class="fa-solid fa-handshake-simple"></i> Cặp Khóa (<span id="custom-pairs-count">0</span>)
           </button>
-          <button class="tab-btn" data-tab="history-tab">
+          <button class="tab-btn" data-tab="rank-tab" title="Bảng xếp hạng thành tích">
+            <i class="fa-solid fa-chart-column"></i> Xếp Hạng
+          </button>
+          <button class="tab-btn" data-tab="history-tab" title="Lịch sử các trận đấu & cập nhật kết quả">
             <i class="fa-solid fa-clock-rotate-left"></i> Lịch Sử (<span id="match-history-count">0</span>)
           </button>
         </div>
@@ -135,28 +138,35 @@
           </div>
         </div>
 
-        <!-- Tab 3: Lịch Sử Chia Đội & Thống Kê -->
-        <div id="history-tab" class="tab-content">
-          <!-- Bảng Thống Kê Cầu Thủ -->
-          <div class="stats-section">
+        <!-- Tab 3: Bảng Xếp Hạng Cầu Thủ (TÁCH RIÊNG HOÀN TOÀN) -->
+        <div id="rank-tab" class="tab-content">
+          <div class="stats-section-standalone">
             <div class="stats-header">
-              <h3><i class="fa-solid fa-chart-column"></i> Bảng Xếp Hạng Cầu Thủ</h3>
+              <div class="stats-title-group">
+                <h3><i class="fa-solid fa-trophy" style="color: #f59e0b;"></i> Bảng Xếp Hạng Cầu Thủ</h3>
+                <span class="stats-subtitle">Tỷ lệ thắng tính từ các trận đã chốt kết quả</span>
+              </div>
             </div>
             <div id="player-stats-table" class="player-stats-table">
-              <p class="placeholder-msg">Chưa có dữ liệu thống kê. Hãy chia đội và cập nhật kết quả trận đấu!</p>
+              <p class="placeholder-msg">Chưa có dữ liệu thống kê. Hãy chia đội, chốt trận và cập nhật kết quả trận đấu!</p>
             </div>
           </div>
+        </div>
 
-          <!-- Danh Sách Lịch Sử Trận Đấu -->
-          <div class="history-section">
+        <!-- Tab 4: Lịch Sử Các Trận Đấu (TÁCH RIÊNG HOÀN TOÀN) -->
+        <div id="history-tab" class="tab-content">
+          <div class="history-section-standalone">
             <div class="history-header">
-              <h3><i class="fa-solid fa-scroll"></i> Lịch Sử Các Trận</h3>
-              <button id="btn-clear-history" class="btn-sm btn-outline" title="Xóa toàn bộ lịch sử">
+              <div class="history-title-group">
+                <h3><i class="fa-solid fa-scroll" style="color: #38bdf8;"></i> Danh Sách Các Trận</h3>
+                <span class="history-subtitle">Xem lại đội hình & cập nhật kết quả thi đấu</span>
+              </div>
+              <button id="btn-clear-history" class="btn-sm btn-outline btn-clear-history" title="Xóa toàn bộ lịch sử">
                 <i class="fa-solid fa-trash-can"></i> Xóa Hết
               </button>
             </div>
             <div id="match-history-list" class="match-history-list">
-              <p class="placeholder-msg">Chưa có trận nào được lưu. Nhấn "CHIA ĐỘI CÂN KÈO NGAY" để tạo trận mới!</p>
+              <p class="placeholder-msg">Chưa có trận nào được lưu. Hãy chia đội rồi nhấn <strong>"Chốt Đội Hình"</strong> để lưu trận mới!</p>
             </div>
           </div>
         </div>
@@ -210,6 +220,38 @@
             <div class="balance-bar-center-pin"></div>
             <div class="balance-bar-fill-red" id="balance-bar-red" style="width: 50%;"></div>
           </div>
+        </div>
+
+        <!-- Khung 1: Nút Chốt Đội Hình & Xác Nhận Lưu Trận Đấu -->
+        <div id="match-confirm-box" class="match-action-card confirm-mode" style="display: none;">
+          <div class="match-action-content">
+            <div class="action-icon-circle pulse-green">
+              <i class="fa-solid fa-flag-checkered"></i>
+            </div>
+            <div class="action-text-wrap">
+              <div class="action-card-title">Đội hình đã chia xong!</div>
+              <div class="action-card-desc">Hãy chốt đội hình này để chính thức lưu trận đấu và chuẩn bị thi đấu</div>
+            </div>
+          </div>
+          <button id="btn-lock-match" class="btn-lock-match" title="Chốt và lưu trận đấu này vào lịch sử">
+            <i class="fa-solid fa-lock"></i> Chốt & Lưu Đội Hình Này
+          </button>
+        </div>
+
+        <!-- Khung 2: Trạng Thái Đã Chốt & Nút Cập Nhật Kết Quả Nhanh -->
+        <div id="match-locked-box" class="match-action-card locked-mode" style="display: none;">
+          <div class="match-action-content">
+            <div class="action-icon-circle green-solid">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="action-text-wrap">
+              <div class="action-card-title" id="locked-card-title">Trận đấu đã được chốt!</div>
+              <div class="action-card-desc" id="locked-card-desc">Đã lưu vào danh sách Lịch Sử. Sau khi đá xong hãy cập nhật kết quả:</div>
+            </div>
+          </div>
+          <button id="btn-open-result-current" class="btn-record-now" title="Cập nhật tỷ số và đội thắng cho trận đấu này">
+            <i class="fa-solid fa-trophy"></i> Cập Nhật Kết Quả / Tỷ Số
+          </button>
         </div>
 
         <!-- Mô phỏng sân bóng cỏ 2D -->
