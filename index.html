@@ -16,7 +16,7 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <link rel="stylesheet" href="style.css?v=5.0" />
+  <link rel="stylesheet" href="style.css?v=6.0" />
 </head>
 
 <body>
@@ -30,8 +30,12 @@
           <p class="subtitle">Chia Đội Đá Banh Ghép Cặp Cân Kèo Cho Nhóm 12 Người</p>
         </div>
       </div>
-      <div class="header-actions" style="display: none;">
-        <button id="btn-quick-rules" class="btn-ghost" title="Xem cơ chế chia">
+      <div class="header-actions">
+        <div class="cloud-sync-status" id="cloud-status" title="Đồng bộ thời gian thực đám mây">
+          <span class="status-dot"></span>
+          <span class="status-text">Đang kết nối...</span>
+        </div>
+        <button id="btn-quick-rules" class="btn-ghost" title="Xem cơ chế chia" style="display: none;">
           <i class="fa-solid fa-circle-question"></i> Cách Chia Cặp
         </button>
       </div>
@@ -317,7 +321,10 @@
 
   </div>
 
-  <script src="app.js?v=5.0"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+  <script src="app.js?v=6.0"></script>
 </body>
 
 </html>

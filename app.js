@@ -19,21 +19,33 @@ const DEFAULT_PLAYERS = [
   { id: 'p12', name: 'Anh Lượng', skill: 3, pos: 'ALL', attending: true }
 ];
 
+const firebaseConfig = {
+  apiKey: "AIzaSyAeOe2W1F0wSsYYooQdCtRPMUdCyXpjbWE",
+  authDomain: "chia-doi-bong.firebaseapp.com",
+  databaseURL: "https://chia-doi-bong-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "chia-doi-bong",
+  storageBucket: "chia-doi-bong.firebasestorage.app",
+  messagingSenderId: "539410880572",
+  appId: "1:539410880572:web:2b318dc28f35dacfe54b39"
+};
+
 const SKILL_SCORES = { 5: 95, 4: 80, 3: 65, 2: 50, 1: 35 };
 
 class FootballTeamApp {
   constructor() {
-    this.players = this.loadPlayers();
-    this.customPairs = this.loadCustomPairs();
+    this.players = this.loadPlayersLocal();
+    this.customPairs = this.loadCustomPairsLocal();
     this.currentResult = null;
+    this.db = null;
 
     this.initElements();
     this.bindEvents();
     this.render();
+    this.initFirebase();
   }
 
-  // LocalStorage Helpers
-  loadPlayers() {
+  // LocalStorage Helpers (Dự phòng khi offline)
+  loadPlayersLocal() {
     const saved = localStorage.getItem('fb_players_v5');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) {}
@@ -41,11 +53,11 @@ class FootballTeamApp {
     return JSON.parse(JSON.stringify(DEFAULT_PLAYERS));
   }
 
-  savePlayers() {
+  savePlayersLocal() {
     localStorage.setItem('fb_players_v5', JSON.stringify(this.players));
   }
 
-  loadCustomPairs() {
+  loadCustomPairsLocal() {
     const saved = localStorage.getItem('fb_custom_pairs');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) {}
@@ -53,12 +65,100 @@ class FootballTeamApp {
     return [];
   }
 
-  saveCustomPairs() {
+  saveCustomPairsLocal() {
     localStorage.setItem('fb_custom_pairs', JSON.stringify(this.customPairs));
+  }
+
+  // Lưu trữ đồng bộ lên Firebase Realtime
+  savePlayers() {
+    this.savePlayersLocal();
+    if (this.db) {
+      this.db.ref('football/players').set(this.players).catch(e => console.warn('Lỗi ghi Firebase:', e));
+    }
+  }
+
+  saveCustomPairs() {
+    this.saveCustomPairsLocal();
+    if (this.db) {
+      this.db.ref('football/customPairs').set(this.customPairs).catch(e => console.warn('Lỗi ghi Firebase:', e));
+    }
+  }
+
+  initFirebase() {
+    try {
+      if (typeof firebase !== 'undefined' && firebaseConfig && firebaseConfig.databaseURL) {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        this.db = firebase.database();
+
+        // 1. Kiểm tra trạng thái mạng
+        const connectedRef = this.db.ref('.info/connected');
+        connectedRef.on('value', snap => {
+          if (snap.val() === true) {
+            this.updateCloudStatus(true, 'Đồng bộ Realtime');
+          } else {
+            this.updateCloudStatus(false, 'Đang kết nối...');
+          }
+        });
+
+        // 2. Lắng nghe danh sách cầu thủ thời gian thực
+        const playersRef = this.db.ref('football/players');
+        playersRef.on('value', snapshot => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            const list = Array.isArray(data) ? data : Object.values(data);
+            this.players = list.filter(p => p && p.id);
+            this.savePlayersLocal();
+            this.render();
+          } else {
+            // Lần đầu mở Database: Tự động khởi tạo danh sách 12 cầu thủ lên Cloud
+            playersRef.set(DEFAULT_PLAYERS);
+          }
+        });
+
+        // 3. Lắng nghe cặp cố định
+        const pairsRef = this.db.ref('football/customPairs');
+        pairsRef.on('value', snapshot => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            const list = Array.isArray(data) ? data : Object.values(data);
+            this.customPairs = list.filter(p => p && p.id);
+            this.saveCustomPairsLocal();
+            this.render();
+          } else {
+            this.customPairs = [];
+            this.render();
+          }
+        });
+
+        // 4. Lắng nghe kết quả chia đội
+        const resultRef = this.db.ref('football/currentResult');
+        resultRef.on('value', snapshot => {
+          if (snapshot.exists()) {
+            this.currentResult = snapshot.val();
+            this.renderResult();
+          }
+        });
+      } else {
+        this.updateCloudStatus(false, 'Ngoại tuyến (Offline)');
+      }
+    } catch (err) {
+      console.warn('Lỗi kết nối Firebase:', err);
+      this.updateCloudStatus(false, 'Ngoại tuyến');
+    }
+  }
+
+  updateCloudStatus(isOnline, text) {
+    if (!this.cloudStatusEl) return;
+    this.cloudStatusEl.className = isOnline ? 'cloud-sync-status' : 'cloud-sync-status offline';
+    const textEl = this.cloudStatusEl.querySelector('.status-text');
+    if (textEl) textEl.textContent = text;
   }
 
   initElements() {
     // Form & List
+    this.cloudStatusEl = document.getElementById('cloud-status');
     this.playersListEl = document.getElementById('players-list');
     this.addPlayerForm = document.getElementById('add-player-form');
     this.newPlayerNameInput = document.getElementById('new-player-name');
@@ -129,8 +229,12 @@ class FootballTeamApp {
       if (confirm('Khôi phục lại danh sách 12 cầu thủ mẫu ban đầu?')) {
         this.players = JSON.parse(JSON.stringify(DEFAULT_PLAYERS));
         this.customPairs = [];
+        this.currentResult = null;
         this.savePlayers();
         this.saveCustomPairs();
+        if (this.db) {
+          this.db.ref('football/currentResult').remove();
+        }
         this.render();
         this.showToast('Đã khôi phục danh sách mẫu');
       }
@@ -432,6 +536,10 @@ class FootballTeamApp {
       pairs: pairedResults,
       timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
     };
+
+    if (this.db) {
+      this.db.ref('football/currentResult').set(this.currentResult).catch(e => console.warn('Lỗi ghi Firebase:', e));
+    }
 
     this.renderResult();
     this.showToast('⚽ Đã chia cặp cân bằng thành công!');
